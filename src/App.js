@@ -217,28 +217,87 @@ const Dashboard = () => {
           <Column title="Vegas Says" category="vegas" data={data.vegas || {}} />
           <Column title="Fantasy Says" category="fantasy" data={data.fantasy || {}} />
           <Column title="Match Up Says" category="matchup" data={data.matchup || {}} />
+          <Column title="Injuries" category="injuries" data={data.injuries || {}} />
         </div>
       </div>
     </div>
   );
 };
 
+// const Column = ({ title, category, data }) => {
+//   return (
+//     <div className="bg-gray-800 rounded-lg shadow-lg p-6">
+//       <h2 className="text-2xl font-semibold mb-4 text-yellow-400">{title}</h2>
+//       {Object.entries(data).length === 0 ? (
+//         <p>No data available</p>
+//       ) : (
+//         Object.values(data).map((item, index) => (
+//           <div key={index} className="mb-4 p-4 bg-gray-700 rounded-lg">
+//             <p className="text-sm text-gray-300">{new Date(item.fields.Date).toLocaleDateString()}</p>
+//             <div className="mt-2 prose prose-invert max-w-none">
+//               <ReactMarkdown>{item.fields.Content}</ReactMarkdown>
+//             </div>
+//             <a href={item.fields.Source} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 mt-2 inline-block">
+//               Source
+//             </a>
+//           </div>
+//         ))
+//       )}
+//     </div>
+//   );
+// };
+
 const Column = ({ title, category, data }) => {
+  const [expandedSections, setExpandedSections] = useState({});
+
+  useEffect(() => {
+    const initialExpandedState = Object.keys(data).reduce((acc, sourceKey) => {
+      acc[sourceKey] = true;
+      return acc;
+    }, {});
+    setExpandedSections(initialExpandedState);
+  }, [data]);
+
+  const toggleSection = (sourceKey) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sourceKey]: !prev[sourceKey]
+    }));
+  };
+
+  const getSectionTitle = (item, sourceKey) => {
+    return item.fields.Title || item.fields.Name || item.fields.Source || `Section ${sourceKey}`;
+  };
+
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-semibold mb-4 text-yellow-400">{title}</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-yellow-400">{title}</h2>
       {Object.entries(data).length === 0 ? (
         <p>No data available</p>
       ) : (
-        Object.values(data).map((item, index) => (
-          <div key={index} className="mb-4 p-4 bg-gray-700 rounded-lg">
-            <p className="text-sm text-gray-300">{new Date(item.fields.Date).toLocaleDateString()}</p>
-            <div className="mt-2 prose prose-invert max-w-none">
-              <ReactMarkdown>{item.fields.Content}</ReactMarkdown>
-            </div>
-            <a href={item.fields.Source} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 mt-2 inline-block">
-              Source
-            </a>
+        Object.entries(data).map(([sourceKey, item], index) => (
+          <div key={index} className="mb-6 bg-gray-700 rounded-lg overflow-hidden shadow-md">
+            <button 
+              onClick={() => toggleSection(sourceKey)}
+              className="w-full text-left p-4 flex justify-between items-center hover:bg-gray-600 transition-colors duration-200"
+            >
+              <span className="font-bold text-lg text-cyan-300 flex items-center">
+                <span className="mr-2 text-xl">📌</span>
+                {getSectionTitle(item, sourceKey)}
+              </span>
+              <span className="text-gray-400">{expandedSections[sourceKey] ? '▲' : '▼'}</span>
+            </button>
+            {expandedSections[sourceKey] && (
+              <div className="p-4 border-t border-gray-600">
+                <p className="text-sm text-gray-400 mb-3">{new Date(item.fields.Date).toLocaleDateString()}</p>
+                <div className="prose prose-invert max-w-none">
+                  <ReactMarkdown>{item.fields.Content}</ReactMarkdown>
+                </div>
+                <a href={item.fields.Source} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 mt-3 inline-block">
+                  Source
+                </a>
+              </div>
+            )}
           </div>
         ))
       )}
