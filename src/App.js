@@ -270,9 +270,9 @@ const Column = ({ title, category, data }) => {
                 <div className="prose prose-invert max-w-none">
                   <ReactMarkdown>{item.fields.Content}</ReactMarkdown>
                 </div>
-                <a href={item.fields.Source} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 mt-3 inline-block">
+                {/* <a href={item.fields.Source} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 mt-3 inline-block">
                   Source
-                </a>
+                </a> */}
               </div>
             )}
           </div>
