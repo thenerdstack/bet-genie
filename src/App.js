@@ -224,35 +224,12 @@ const Dashboard = () => {
   );
 };
 
-// const Column = ({ title, category, data }) => {
-//   return (
-//     <div className="bg-gray-800 rounded-lg shadow-lg p-6">
-//       <h2 className="text-2xl font-semibold mb-4 text-yellow-400">{title}</h2>
-//       {Object.entries(data).length === 0 ? (
-//         <p>No data available</p>
-//       ) : (
-//         Object.values(data).map((item, index) => (
-//           <div key={index} className="mb-4 p-4 bg-gray-700 rounded-lg">
-//             <p className="text-sm text-gray-300">{new Date(item.fields.Date).toLocaleDateString()}</p>
-//             <div className="mt-2 prose prose-invert max-w-none">
-//               <ReactMarkdown>{item.fields.Content}</ReactMarkdown>
-//             </div>
-//             <a href={item.fields.Source} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 mt-2 inline-block">
-//               Source
-//             </a>
-//           </div>
-//         ))
-//       )}
-//     </div>
-//   );
-// };
-
 const Column = ({ title, category, data }) => {
   const [expandedSections, setExpandedSections] = useState({});
 
   useEffect(() => {
     const initialExpandedState = Object.keys(data).reduce((acc, sourceKey) => {
-      acc[sourceKey] = true;
+      acc[sourceKey] = false;
       return acc;
     }, {});
     setExpandedSections(initialExpandedState);
