@@ -345,7 +345,7 @@ const Column = ({ title, category, data, isLoading }) => {
 
   useEffect(() => {
     const initialExpandedState = Object.keys(data).reduce((acc, sourceKey) => {
-      acc[sourceKey] = false;
+      acc[sourceKey] = true;
       return acc;
     }, {});
     setExpandedSections(initialExpandedState);
