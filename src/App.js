@@ -331,9 +331,9 @@ const Dashboard = () => {
         <h1 className="text-4xl font-bold text-center mb-8 text-green-500">Betting Dashboard</h1>
         <div className="space-y-8">
           <Column title="Vegas Says" category="vegas" data={data.vegas || {}} isLoading={isLoading} />
-          <Column title="Fantasy Says" category="fantasy" data={data.fantasy || {}} isLoading={isLoading} />
+          <Column title="Players Who are Trending" category="fantasy" data={data.fantasy || {}} isLoading={isLoading} />
           <Column title="Match Up Says" category="matchup" data={data.matchup || {}} isLoading={isLoading} />
-          <Column title="Injuries" category="injuries" data={data.injuries || {}} isLoading={isLoading} />
+          {/* <Column title="Injuries" category="injuries" data={data.injuries || {}} isLoading={isLoading} /> */}
         </div>
       </div>
     </div>
