@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/bet-genie/static/css/main.263fe3ae.css",
-    "main.js": "/bet-genie/static/js/main.c3fd5428.js",
+    "main.js": "/bet-genie/static/js/main.aacc9db9.js",
     "static/js/453.67d15ed7.chunk.js": "/bet-genie/static/js/453.67d15ed7.chunk.js",
     "index.html": "/bet-genie/index.html",
     "main.263fe3ae.css.map": "/bet-genie/static/css/main.263fe3ae.css.map",
-    "main.c3fd5428.js.map": "/bet-genie/static/js/main.c3fd5428.js.map",
+    "main.aacc9db9.js.map": "/bet-genie/static/js/main.aacc9db9.js.map",
     "453.67d15ed7.chunk.js.map": "/bet-genie/static/js/453.67d15ed7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.263fe3ae.css",
-    "static/js/main.c3fd5428.js"
+    "static/js/main.aacc9db9.js"
   ]
 }
