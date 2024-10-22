@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { BrowserRouter as Router, Route, Link, Routes, useParams } from 'react-router-dom';
+// import { BrowserRouter as Router, Route, Link, Routes, useParams } from 'react-router-dom';
 import OffenseComparisonChart from './OffenseComparisonChart';
 import DefenseComparisonChart from './DefenseComparisonChart';
+import { HashRouter as Router, Route, Link, Routes, useParams } from 'react-router-dom';
 
 
 const generateSlug = (matchup) => {
@@ -131,10 +132,10 @@ const Overview = ({ data }) => {
       <h2 className="text-2xl font-semibold mb-4">All Matchups</h2>
       {matchups.length > 0 ? (
         matchups.map((bet, index) => (
-          <Link key={index} to={`/matchup/${generateSlug(bet.matchup)}`} className="block mb-4 p-4 bg-gray-800 rounded-lg hover:bg-gray-700">
-            <h3 className="text-xl font-bold">{bet.matchup}</h3>
-            <p>{bet.betting_insight}</p>
-          </Link>
+        <Link key={index} to={`/matchup/${generateSlug(bet.matchup)}`} className="block mb-4 p-4 bg-gray-800 rounded-lg hover:bg-gray-700">
+          <h3 className="text-xl font-bold">{bet.matchup}</h3>
+          <p>{bet.betting_insight}</p>
+        </Link>
         ))
       ) : (
         <p>No matchups available</p>
