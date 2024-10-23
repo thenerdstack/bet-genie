@@ -5,6 +5,18 @@ import OffenseComparisonChart from './OffenseComparisonChart';
 import DefenseComparisonChart from './DefenseComparisonChart';
 import { HashRouter as Router, Route, Link, Routes, useParams } from 'react-router-dom';
 
+const normalizeKey = (key) => key.toLowerCase().replace(/[_\s]/g, '');
+
+const getNestedValue = (obj, path) => {
+  const normalizedObj = Object.keys(obj).reduce((acc, key) => {
+    acc[normalizeKey(key)] = obj[key];
+    return acc;
+  }, {});
+
+  return path.split('.').reduce((current, key) => {
+    return current && current[normalizeKey(key)] !== undefined ? current[normalizeKey(key)] : undefined;
+  }, normalizedObj);
+};
 
 const generateSlug = (matchup) => {
   return matchup.replace(/\s+/g, '-').replace(/[^\w-]+/g, '').toLowerCase();
@@ -45,12 +57,27 @@ const Dashboard = () => {
       // Parse the content of the latest data
       const parsedData = Object.entries(latestData).reduce((acc, [category, item]) => {
         try {
-          const content = JSON.parse(item.fields.Content);
-          acc[category] = content;
+          const customJSONParse = (jsonString) => {
+            return JSON.parse(jsonString.replace(/:\s*\+/g, ': '));
+          };
+  
+          if (category === 'teamStats2') {
+            acc[category] = customJSONParse(item.fields.Content);
+          } else {
+            acc[category] = JSON.parse(item.fields.Content);
+          }
           
           // If this is the trends data, parse it separately
           if (category === 'trends') {
-            acc.trendsData = JSON.parse(content);
+            acc.trendsData = acc[category];
+          }
+
+          if (category === 'powerRankings') {
+            acc[category] = JSON.parse(item.fields.Content);
+          }
+
+          if (category === 'hotPlayers') {
+            acc[category] = JSON.parse(item.fields.Content);
           }
         } catch (error) {
           console.error(`Error parsing JSON content for ${category}:`, error);
@@ -68,6 +95,7 @@ const Dashboard = () => {
       setIsLoading(false);
     }
   };
+  
   
   if (isLoading) {
     return <div>Loading...</div>;
@@ -91,12 +119,15 @@ const Dashboard = () => {
 const Overview = ({ data }) => {
   console.log("Data in Overview:", data);
   
-  const matchups = data.matchup && data.matchup["Trending Bets for Week"] ? data.matchup["Trending Bets for Week"] : [];
+  // const matchups = data.matchup && data.matchup["Trending Bets for Week"] ? data.matchup["Trending Bets for Week"] : [];
   const fantasy = data.fantasy || {};
+  // const matchups = getNestedValue(data, 'matchup.Trending Bets for Week') || [];
+  const matchups = data.vegas || [];
+
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4">Fantasy Picks</h2>
+      {/* <h2 className="text-2xl font-semibold mb-4">Fantasy Picks</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div className="bg-gray-800 p-4 rounded-lg">
@@ -127,19 +158,35 @@ const Overview = ({ data }) => {
         <p><strong>Tournament RB:</strong> {fantasy.additionalRunningBacksTournament?.join(', ')}</p>
         <p><strong>Tournament WR:</strong> {fantasy.additionalWideReceiversTournament?.join(', ')}</p>
         <p><strong>Tournament TE:</strong> {fantasy.additionalTightEndsTournament?.join(', ')}</p>
+      </div> */}
+
+      <h2 className="text-2xl font-semibold mb-4">🔥 Trending Players</h2>
+
+      <div className="bg-gray-800 p-4 rounded-lg mb-8">
+        {data.hotPlayers && data.hotPlayers.length > 0 ? (
+          data.hotPlayers.map((player, index) => (
+            <div key={index} className="mb-4 last:mb-0">
+              <p className="font-bold">{player.player} ({player.team})</p>
+              <p className="text-sm text-gray-300">{player.trend}</p>
+            </div>
+          ))
+        ) : (
+          <p>No trending players available</p>
+        )}
       </div>
 
       <h2 className="text-2xl font-semibold mb-4">All Matchups</h2>
-      {matchups.length > 0 ? (
-        matchups.map((bet, index) => (
-        <Link key={index} to={`/matchup/${generateSlug(bet.matchup)}`} className="block mb-4 p-4 bg-gray-800 rounded-lg hover:bg-gray-700">
-          <h3 className="text-xl font-bold">{bet.matchup}</h3>
-          <p>{bet.betting_insight}</p>
-        </Link>
-        ))
-      ) : (
-        <p>No matchups available</p>
-      )}
+        {matchups.length > 0 ? (
+          matchups.map((bet, index) => (
+            <Link key={index} to={`/matchup/${generateSlug(bet.game)}`} className="block mb-4 p-4 bg-gray-800 rounded-lg hover:bg-gray-700">
+              <h3 className="text-xl font-bold">{bet.game}</h3>
+              <p>Current Spread: {bet.current_spread}</p>
+              <p>Recent Changes: {bet.recent_changes}</p>
+            </Link>
+          ))
+        ) : (
+          <p>No matchups available</p>
+        )}
     </div>
   );
 };
@@ -147,23 +194,81 @@ const Overview = ({ data }) => {
 
 const MatchupPage = ({ data }) => {
   const { slug } = useParams();
-  const matchups = data.matchup && data.matchup["Trending Bets for Week"] ? data.matchup["Trending Bets for Week"] : [];
-  const matchup = matchups.find(m => generateSlug(m.matchup) === slug);
-  const vegasData = data.vegas ? data.vegas.find(game => game.game === matchup?.matchup) : null;
+  const matchups = data.vegas || [];
+  const matchup = matchups.find(m => generateSlug(m.game) === slug);
   const trendsData = data.trends;
   const teamStats = data.teamStats;
   const teamStats2 = data.teamStats2;
+  const bettingInsight = data.matchup && data.matchup["Trending Bets for Week"] ? 
+    data.matchup["Trending Bets for Week"].find(m => generateSlug(m.matchup) === slug)?.betting_insight : 
+    null;
 
   if (!matchup || !trendsData || !teamStats || !teamStats2) {
     return <div>Matchup, trends data, or team stats not found</div>;
   }
 
-  const [team1, team2] = matchup.matchup.split(' vs. ');
+  // Declare team1 and team2 only once
+  const [team1, team2] = matchup.game.split(' vs. ');
+
+  const findTeamData = (teamName) => {
+    console.log('Searching for team:', teamName);
+    if (data.powerRankings && Array.isArray(data.powerRankings.team_rankings)) {
+      const teamNickname = teamName.split(' ').pop(); // Get the last word of the team name
+      return data.powerRankings.team_rankings.find(team => {
+        console.log('Comparing with:', team.team);
+        return team.team.toLowerCase() === teamNickname.toLowerCase();
+      });
+    }
+    return null;
+  };
+
+  const team1Data = findTeamData(team1);
+  const team2Data = findTeamData(team2);
+  console.log(team1Data)
+  const getTrendValue = (category, subcategory, field) => {
+    const categoryVariations = [
+      category,
+      category.replace(/\s/g, '_'),
+      category.replace(/_/g, ' '),
+      category.toLowerCase(),
+      category.toLowerCase().replace(/\s/g, '_'),
+      category.toLowerCase().replace(/_/g, ' ')
+    ];
+  
+    for (let cat of categoryVariations) {
+      if (trendsData && trendsData[cat] && trendsData[cat].overall_performance && trendsData[cat].overall_performance[subcategory]) {
+        return trendsData[cat].overall_performance[subcategory][field] || 'N/A';
+      }
+    }
+  
+    return 'N/A';
+  };
+
+  if (!matchup || !trendsData || !teamStats || !teamStats2) {
+    return <div>Matchup, trends data, or team stats not found</div>;
+  }
+
+  console.log('trendsData in MatchupPage:', trendsData);
+  console.log('powerRankings:', data.powerRankings);
+
 
   return (
     <div>
       <Link to="/" className="text-blue-400 hover:text-blue-300 mb-4 inline-block">&larr; Back to Overview</Link>
-      <h2 className="text-2xl font-semibold mb-4">{matchup.matchup}</h2>
+      <h2 className="text-2xl font-semibold mb-4">{matchup.game}</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <h3 className="text-xl font-semibold mb-2">{team1}</h3>
+          <p className="mb-2">Power Rank: {team1Data?.power_rank || 'N/A'} ({team1Data?.change || 'N/A'})</p>
+          <p>{team1Data?.summary || 'No summary available'}</p>
+        </div>
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <h3 className="text-xl font-semibold mb-2">{team2}</h3>
+          <p className="mb-2">Power Rank: {team2Data?.power_rank || 'N/A'} ({team2Data?.change || 'N/A'})</p>
+          <p>{team2Data?.summary || 'No summary available'}</p>
+        </div>
+      </div>
 
       <div className="bg-gray-800 p-4 rounded-lg mb-4">
         <h3 className="text-xl font-semibold mb-2">Offensive Comparison</h3>
@@ -175,48 +280,50 @@ const MatchupPage = ({ data }) => {
         <DefenseComparisonChart teamStats={teamStats2} team1={team1} team2={team2} />
       </div>
 
-      <div className="bg-gray-800 p-4 rounded-lg mb-4">
-        <h3 className="text-xl font-semibold mb-2">Betting Insight</h3>
-        <p>{matchup.betting_insight}</p>
-      </div>
-
-      {vegasData && (
+      {bettingInsight && (
         <div className="bg-gray-800 p-4 rounded-lg mb-4">
-          <h3 className="text-xl font-semibold mb-2">📌 Vegas Odds</h3>
-          <p>Current Spread: {vegasData.current_spread}</p>
-          <p>Recent Changes: {vegasData.recent_changes}</p>
-          <p>Betting Shift: {vegasData.betting_shift}</p>
+          <h3 className="text-xl font-semibold mb-2">Betting Insight</h3>
+          <p>{bettingInsight}</p>
         </div>
       )}
 
-      <div className="bg-gray-800 p-4 rounded-lg mb-4">
+      {matchup && (
+     <div className="bg-gray-800 p-4 rounded-lg mb-4">
+        <h3 className="text-xl font-semibold mb-2">📌 Vegas Odds</h3>
+        <p>Current Spread: {matchup.current_spread}</p>
+        <p>Recent Changes: {matchup.recent_changes}</p>
+        <p>Betting Shift: {matchup.betting_shift}</p>
+      </div>
+      )}
+
+<div className="bg-gray-800 p-4 rounded-lg mb-4">
         <h3 className="text-xl font-semibold mb-2">📌 Season-to-date Trends</h3>        
         <div className="mb-4">
           <h4 className="text-lg font-semibold">Straight Up Trends</h4>
           <ul>
-            <li>Away Teams: {trendsData["Straight Up Trends"].overall_performance.away_teams.wins}-{trendsData["Straight Up Trends"].overall_performance.away_teams.losses} ({trendsData["Straight Up Trends"].overall_performance.away_teams.percentage}%)</li>
-            <li>Home Teams: {trendsData["Straight Up Trends"].overall_performance.home_teams.wins}-{trendsData["Straight Up Trends"].overall_performance.home_teams.losses} ({trendsData["Straight Up Trends"].overall_performance.home_teams.percentage}%)</li>
-            <li>Favorites: {trendsData["Straight Up Trends"].overall_performance.favorites.wins}-{trendsData["Straight Up Trends"].overall_performance.favorites.losses} ({trendsData["Straight Up Trends"].overall_performance.favorites.percentage}%)</li>
-            <li>Underdogs: {trendsData["Straight Up Trends"].overall_performance.dogs.wins}-{trendsData["Straight Up Trends"].overall_performance.dogs.losses} ({trendsData["Straight Up Trends"].overall_performance.dogs.percentage}%)</li>
+            <li>Away Teams: {getTrendValue('Straight Up Trends', 'away_teams', 'wins')}-{getTrendValue('Straight Up Trends', 'away_teams', 'losses')} ({getTrendValue('Straight Up Trends', 'away_teams', 'percentage')}%)</li>
+            <li>Home Teams: {getTrendValue('Straight Up Trends', 'home_teams', 'wins')}-{getTrendValue('Straight Up Trends', 'home_teams', 'losses')} ({getTrendValue('Straight Up Trends', 'home_teams', 'percentage')}%)</li>
+            <li>Favorites: {getTrendValue('Straight Up Trends', 'favorites', 'wins')}-{getTrendValue('Straight Up Trends', 'favorites', 'losses')} ({getTrendValue('Straight Up Trends', 'favorites', 'percentage')}%)</li>
+            <li>Underdogs: {getTrendValue('Straight Up Trends', 'dogs', 'wins')}-{getTrendValue('Straight Up Trends', 'dogs', 'losses')} ({getTrendValue('Straight Up Trends', 'dogs', 'percentage')}%)</li>
           </ul>
         </div>
 
         <div className="mb-4">
           <h4 className="text-lg font-semibold">Against the Spread Trends</h4>
           <ul>
-            <li>Away Teams: {trendsData["Against the Spread Trends"].overall_performance.away_teams.wins}-{trendsData["Against the Spread Trends"].overall_performance.away_teams.losses}-{trendsData["Against the Spread Trends"].overall_performance.away_teams.pushes} ({trendsData["Against the Spread Trends"].overall_performance.away_teams.percentage}%)</li>
-            <li>Home Teams: {trendsData["Against the Spread Trends"].overall_performance.home_teams.wins}-{trendsData["Against the Spread Trends"].overall_performance.home_teams.losses}-{trendsData["Against the Spread Trends"].overall_performance.home_teams.pushes} ({trendsData["Against the Spread Trends"].overall_performance.home_teams.percentage}%)</li>
-            <li>Favorites: {trendsData["Against the Spread Trends"].overall_performance.favorites.wins}-{trendsData["Against the Spread Trends"].overall_performance.favorites.losses}-{trendsData["Against the Spread Trends"].overall_performance.favorites.pushes} ({trendsData["Against the Spread Trends"].overall_performance.favorites.percentage}%)</li>
-            <li>Underdogs: {trendsData["Against the Spread Trends"].overall_performance.dogs.wins}-{trendsData["Against the Spread Trends"].overall_performance.dogs.losses}-{trendsData["Against the Spread Trends"].overall_performance.dogs.pushes} ({trendsData["Against the Spread Trends"].overall_performance.dogs.percentage}%)</li>
+            <li>Away Teams: {getTrendValue('Against the Spread Trends', 'away_teams', 'wins')}-{getTrendValue('Against the Spread Trends', 'away_teams', 'losses')}-{getTrendValue('Against the Spread Trends', 'away_teams', 'pushes')} ({getTrendValue('Against the Spread Trends', 'away_teams', 'percentage')}%)</li>
+            <li>Home Teams: {getTrendValue('Against the Spread Trends', 'home_teams', 'wins')}-{getTrendValue('Against the Spread Trends', 'home_teams', 'losses')}-{getTrendValue('Against the Spread Trends', 'home_teams', 'pushes')} ({getTrendValue('Against the Spread Trends', 'home_teams', 'percentage')}%)</li>
+            <li>Favorites: {getTrendValue('Against the Spread Trends', 'favorites', 'wins')}-{getTrendValue('Against the Spread Trends', 'favorites', 'losses')}-{getTrendValue('Against the Spread Trends', 'favorites', 'pushes')} ({getTrendValue('Against the Spread Trends', 'favorites', 'percentage')}%)</li>
+            <li>Underdogs: {getTrendValue('Against the Spread Trends', 'dogs', 'wins')}-{getTrendValue('Against the Spread Trends', 'dogs', 'losses')}-{getTrendValue('Against the Spread Trends', 'dogs', 'pushes')} ({getTrendValue('Against the Spread Trends', 'dogs', 'percentage')}%)</li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-lg font-semibold">Over vs Under Trends</h4>
           <ul>
-            <li>All Games: {trendsData["Over vs Under Trends"].overall_performance.all_games.overs}-{trendsData["Over vs Under Trends"].overall_performance.all_games.unders} (Over: {trendsData["Over vs Under Trends"].overall_performance.all_games.percentage.overs}%)</li>
-            <li>Non-Overtime Games: {trendsData["Over vs Under Trends"].overall_performance.non_overtime_games.overs}-{trendsData["Over vs Under Trends"].overall_performance.non_overtime_games.unders} (Over: {trendsData["Over vs Under Trends"].overall_performance.non_overtime_games.percentage.overs}%)</li>
-            <li>Overtime Games: {trendsData["Over vs Under Trends"].overall_performance.overtime_games.overs} (Over: {trendsData["Over vs Under Trends"].overall_performance.overtime_games.percentage}%)</li>
+            <li>All Games: {getTrendValue('Over vs Under Trends', 'all_games', 'overs')}-{getTrendValue('Over vs Under Trends', 'all_games', 'unders')} (Over: {getTrendValue('Over vs Under Trends', 'all_games', 'percentage')}%)</li>
+            <li>Non-Overtime Games: {getTrendValue('Over vs Under Trends', 'non_overtime_games', 'overs')}-{getTrendValue('Over vs Under Trends', 'non_overtime_games', 'unders')} (Over: {getTrendValue('Over vs Under Trends', 'non_overtime_games', 'percentage')}%)</li>
+            <li>Overtime Games: {getTrendValue('Over vs Under Trends', 'overtime_games', 'overs')} (Over: {getTrendValue('Over vs Under Trends', 'overtime_games', 'percentage')}%)</li>
           </ul>
         </div>
       </div>

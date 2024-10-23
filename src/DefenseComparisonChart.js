@@ -4,6 +4,14 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+const parseNumeric = (value) => {
+    if (typeof value === 'string') {
+      return parseFloat(value.replace('+', ''));
+    }
+    return value;
+  };
+  
+
 const DefenseComparisonChart = ({ teamStats, team1, team2 }) => {
   const team1Stats = teamStats.find(stats => stats.team === team1);
   const team2Stats = teamStats.find(stats => stats.team === team2);
@@ -12,12 +20,20 @@ const DefenseComparisonChart = ({ teamStats, team1, team2 }) => {
     return <div>Team stats not found</div>;
   }
 
-  const statComparisons = [
-    { label: 'Points Allowed Per Game', team1: team1Stats.points_allowed_per_game, team2: team2Stats.points_allowed_per_game, invert: true },
-    { label: 'Yards Per Play Allowed', team1: team1Stats.yards_per_play_allowed, team2: team2Stats.yards_per_play_allowed, invert: true },
-    { label: 'First Downs % Allowed', team1: team1Stats.first_downs_percentage_allowed, team2: team2Stats.first_downs_percentage_allowed, invert: true },
-    { label: 'Red Zone % Allowed', team1: team1Stats.red_zone_allowed.percentage, team2: team2Stats.red_zone_allowed.percentage, invert: true },
+//   const statComparisons = [
+//     { label: 'Points Allowed Per Game', team1: team1Stats.points_allowed_per_game, team2: team2Stats.points_allowed_per_game, invert: true },
+//     { label: 'Yards Per Play Allowed', team1: team1Stats.yards_per_play_allowed, team2: team2Stats.yards_per_play_allowed, invert: true },
+//     { label: 'First Downs % Allowed', team1: team1Stats.first_downs_percentage_allowed, team2: team2Stats.first_downs_percentage_allowed, invert: true },
+//     { label: 'Red Zone % Allowed', team1: team1Stats.red_zone_allowed.percentage, team2: team2Stats.red_zone_allowed.percentage, invert: true },
+//   ];
+
+const statComparisons = [
+    { label: 'Points Allowed Per Game', team1: parseNumeric(team1Stats?.points_allowed_per_game), team2: parseNumeric(team2Stats?.points_allowed_per_game), invert: true },
+    { label: 'Yards Per Play Allowed', team1: parseNumeric(team1Stats?.yards_per_play_allowed), team2: parseNumeric(team2Stats?.yards_per_play_allowed), invert: true },
+    { label: 'First Downs % Allowed', team1: parseNumeric(team1Stats?.first_downs_percentage_allowed), team2: parseNumeric(team2Stats?.first_downs_percentage_allowed), invert: true },
+    { label: 'Red Zone % Allowed', team1: parseNumeric(team1Stats?.red_zone_allowed?.percentage), team2: parseNumeric(team2Stats?.red_zone_allowed?.percentage), invert: true },
   ];
+  
 
   const data = {
     labels: statComparisons.map(comp => comp.label),
