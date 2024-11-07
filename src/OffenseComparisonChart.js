@@ -4,9 +4,21 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+const normalizeTeamName = (teamName) => {
+    return teamName.toLowerCase().split(' ').pop(); // Return the last word (usually the team nickname)
+  };
+
 const OffenseComparisonChart = ({ teamStats, team1, team2 }) => {
-  const team1Stats = teamStats.find(stats => stats.team === team1);
-  const team2Stats = teamStats.find(stats => stats.team === team2);
+    const findTeamStats = (teamName) => {
+      const normalizedName = normalizeTeamName(teamName);
+      return teamStats.find(stats => normalizeTeamName(stats.team) === normalizedName);
+    };
+
+    const team1Stats = findTeamStats(team1);
+    const team2Stats = findTeamStats(team2);  
+
+//   const team1Stats = teamStats.find(stats => stats.team === team1);
+//   const team2Stats = teamStats.find(stats => stats.team === team2);
 
   if (!team1Stats || !team2Stats) {
     return <div>Team stats not found</div>;
