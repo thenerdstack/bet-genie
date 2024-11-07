@@ -311,7 +311,7 @@ const MatchupPage = ({ data }) => {
       </div>
       )}
 
-<div className="bg-gray-800 p-4 rounded-lg mb-4">
+{/* <div className="bg-gray-800 p-4 rounded-lg mb-4">
         <h3 className="text-xl font-semibold mb-2">📌 Season-to-date Trends</h3>        
         <div className="mb-4">
           <h4 className="text-lg font-semibold">Straight Up Trends</h4>
@@ -341,7 +341,7 @@ const MatchupPage = ({ data }) => {
             <li>Overtime Games: {getTrendValue('Over vs Under Trends', 'overtime_games', 'overs')} (Over: {getTrendValue('Over vs Under Trends', 'overtime_games', 'percentage')}%)</li>
           </ul>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
