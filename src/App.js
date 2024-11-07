@@ -210,13 +210,28 @@ const MatchupPage = ({ data }) => {
   // Declare team1 and team2 only once
   const [team1, team2] = matchup.game.split(' vs. ');
 
+  // const findTeamData = (teamName) => {
+  //   console.log('Searching for team:', teamName);
+  //   if (data.powerRankings && Array.isArray(data.powerRankings.team_rankings)) {
+  //     const teamNickname = teamName.split(' ').pop(); // Get the last word of the team name
+  //     return data.powerRankings.team_rankings.find(team => {
+  //       console.log('Comparing with:', team.team);
+  //       return team.team.toLowerCase() === teamNickname.toLowerCase();
+  //     });
+  //   }
+  //   return null;
+  // };
+
   const findTeamData = (teamName) => {
     console.log('Searching for team:', teamName);
     if (data.powerRankings && Array.isArray(data.powerRankings.team_rankings)) {
-      const teamNickname = teamName.split(' ').pop(); // Get the last word of the team name
+      const teamWords = teamName.toLowerCase().split(' ');
       return data.powerRankings.team_rankings.find(team => {
+        const powerRankingTeam = team.team.toLowerCase();
         console.log('Comparing with:', team.team);
-        return team.team.toLowerCase() === teamNickname.toLowerCase();
+        return teamWords.some(word => powerRankingTeam.includes(word)) ||
+               powerRankingTeam.includes(teamWords[teamWords.length - 1]) ||
+               teamWords.includes(powerRankingTeam);
       });
     }
     return null;
@@ -280,12 +295,12 @@ const MatchupPage = ({ data }) => {
         <DefenseComparisonChart teamStats={teamStats2} team1={team1} team2={team2} />
       </div>
 
-      {bettingInsight && (
+      {/* {bettingInsight && (
         <div className="bg-gray-800 p-4 rounded-lg mb-4">
           <h3 className="text-xl font-semibold mb-2">Betting Insight</h3>
           <p>{bettingInsight}</p>
         </div>
-      )}
+      )} */}
 
       {matchup && (
      <div className="bg-gray-800 p-4 rounded-lg mb-4">
